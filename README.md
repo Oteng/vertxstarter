@@ -21,7 +21,8 @@ Replace PROJECT_NAME with the name of your project.
 
 Once you have retrieved the project, you can check that everything works with:
 
-mvn test exec:java
+`mvn test exec:java`
+`mvn compile vertx:run`
 
 The command compiles the project and runs the tests, then it launches the application, so you can check by yourself. Open your browser to http://localhost:8080. You should see a Hello World message.
 Anatomy of the project
@@ -34,13 +35,6 @@ The project contains:
 
     an unit test (src/main/test/io/vertx/starter/MainVerticleTest.java)
 
-Start to hack
-
-    Delete the .git directory
-
-    Open the pom.xml file and customize the groupId, artifactId and version. You can also change the main.verticle property to use your own package name and verticle class.
-
-    Run redeploy.sh (or redeploy.bat on Windows) and the project recompiles while editing.
 
 Note
 	the redeploy script are also configurable
@@ -48,6 +42,6 @@ Building the project
 
 To build the project, just use:
 
-mvn clean package
+`mvn clean package`
 
 It generates a fat-jar in the target directory.
