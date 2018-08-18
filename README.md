@@ -1,6 +1,38 @@
 # Vert.x Maven Starter
 
-This project is a template to start your own Vert.x project using Apache Maven.
+This project is a template to start your own Vert.x project using Apache Maven. It has 
+been structured to resemble normal project structure you have been used to in other 
+frameworks.
+
+## Structure
+    +-starter
+    |  +-MainVerticle.java
+    |  |  +-controllers
+    |  |  |  +-IndexController.java
+    |  |  +-routes
+    |  |  |  +-Routes.java
+    |  |  +-util
+    |  |  |  +-BaseController.java
+    |  |  |  +-Config.java
+    |  |  |  +-CORS.java
+
+### `starter` Package
+This package is the root package of the application. It contains the MainVerticle.java 
+file. This file services as the entry point for the webserver. It is not meant to contain 
+business logic but as a glue for the rest of the application. 
+
+### `controllers` Package
+This package contains all the controllers of the application. This was intened to be 
+one class for one endpoint. However you can do whatever you want :)
+
+### `routes`Package
+This package contains only one file, the Routes.java file. This is where all the endpoints 
+of the application is defined and it is also the point where all the controllers are 
+imported and used.
+__TODO:__ *find a way to automatically load controllers and bind them to their routes*
+
+### `util` Package
+This package contains stuff that other files of the application uses. 
 
 ## Prerequisites
 
@@ -38,7 +70,7 @@ The project contains:
 
 ## Note
 	the redeploy script are also configurable
-Building the project
+## Building the project
 
 To build the project, just use:
 
