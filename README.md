@@ -17,14 +17,14 @@ Create your project with:
 Replace PROJECT_NAME with the name of your project.
 
 
-##Running the project
+## Running the project
 
 Once you have retrieved the project, you can check that everything works with:
 
 `mvn test exec:java`
 `mvn compile vertx:run`
 
-The command compiles the project and runs the tests, then it launches the application, so you can check by yourself. Open your browser to http://localhost:8080. You should see a Hello World message.
+The command compiles the project and runs the tests, then it launches the application, so you can check by yourself. Open your browser to http://localhost:9001. You should see a Hello World message.
 Anatomy of the project
 
 The project contains:
