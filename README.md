@@ -1,14 +1,14 @@
-#Vert.x Maven Starter
+# Vert.x Maven Starter
 
 This project is a template to start your own Vert.x project using Apache Maven.
 
-#Prerequisites
+## Prerequisites
 
     Apache Maven
 
     JDK 8+
 
-##Getting started
+## Getting started
 
 Create your project with:
 
@@ -36,7 +36,7 @@ The project contains:
     an unit test (src/main/test/io/vertx/starter/MainVerticleTest.java)
 
 
-Note
+## Note
 	the redeploy script are also configurable
 Building the project
 
