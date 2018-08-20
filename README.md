@@ -22,7 +22,7 @@ file. This file services as the entry point for the webserver. It is not meant t
 business logic but as a glue for the rest of the application. 
 
 ### `controllers` Package
-This package contains all the controllers of the application. This was intened to be 
+This package contains all the controllers of the application. This was intended to be 
 one class for one endpoint. However you can do whatever you want :)
 
 ### `routes`Package
