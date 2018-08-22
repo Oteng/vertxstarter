@@ -1,15 +1,14 @@
 package com.vertx.starter.util;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
+import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public abstract class BaseModel {
 
@@ -17,17 +16,16 @@ public abstract class BaseModel {
 	 * the name of the class represent the name of the table
 	 */
 	private String table_name = null;
-	private Future<SQLConnection> dbFuture = Future.future();
+//	private Future<SQLConnection> dbFuture = Future.future();
 
-	public Future<SQLConnection> getConnection() {
-		return dbFuture;
-	}
+//	public Future<SQLConnection> getConnection() {
+//		return dbFuture;
+//	}
 
 	private HashMap<String, Object> saveRecord = new HashMap<>();
 
-	public BaseModel() throws SQLException, ClassNotFoundException {
+	public BaseModel() {
 		this.table_name = this.getClassName();
-		Constant.postgreSQLClient.getConnection(dbFuture.completer());
 	}
 
 	protected abstract HashMap<String, String> getColumns();
@@ -36,46 +34,53 @@ public abstract class BaseModel {
 
 	/**
 	 * this function creates a new table when it don't exist.
-	 * @return 
+	 * 
+	 * @return
 	 *
 	 * @return boolean
 	 * @throws SQLException when something goes wrong
 	 */
-	public Future<Void> create(Future<Void> future) throws SQLException {
-		SQLConnection conn = this.dbFuture.result();
-		
+	public Future<Void> create() {
+		Future<Void> future = Future.future();
+
 		StringBuilder stm = new StringBuilder("CREATE TABLE IF NOT EXISTS " + getTable_name() + " (");
 		HashMap<String, String> columns = getColumns();
 		for (Object key : columns.keySet()) {
 			stm.append(key).append(" ").append(columns.get(key)).append(",");
 		}
 		// get and add constrain;
-		stm.append(getConstraint());
-		// remove the last comma
-		stm.replace(stm.length() - 1, stm.length(), ");");
-//	        System.out.println(stm.toString());
-		conn.execute(stm.toString(), res ->{
-			conn.close();
-			future.map(res);
+		stm.append(getConstraint()).append(");");
+
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.execute(stm.toString(), res -> {
+				conn.close();
+				future.map(res);
+			});
+		});
+
+		return future;
+	}
+
+	public Future<Void> exist() {
+		Future<Void> future = Future.future();
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.execute("SELECT CASE WHEN exists((SELECT * FROM information_schema.tables WHERE 'table_name' = \'"
+					+ this.table_name + "\')) THEN 1 ELSE 0 END", rs -> {
+						conn.close();
+						future.map(rs);
+					});
 		});
 		return future;
 	}
 
-	public Future<Void> exist(Future<Void> future) {
-		SQLConnection conn = this.dbFuture.result();
-		conn.execute("SELECT CASE WHEN exists((SELECT * FROM information_schema.tables WHERE 'table_name' = \'"
-				+ this.table_name + "\')) THEN 1 ELSE 0 END", rs ->{
-					conn.close();
-					future.map(rs);
-				});
-		return future;
-	}
-
-	private String getClassName() {
-		String name = this.getClass().getName();
-		String[] arrName = StringUtils.split(name, ".");
-		return (arrName[arrName.length - 1]).toLowerCase();
-	}
+	protected abstract String getClassName();
+//	{
+//		String name = this.getClass().getName();
+//		String[] arrName = StringUtils.split(name, ".");
+//		return (arrName[arrName.length - 1]).toLowerCase();
+//	}
 
 	private String getTable_name() {
 		return this.table_name;
@@ -88,9 +93,9 @@ public abstract class BaseModel {
 	 *
 	 * @return true when the insertion was done correctly and false otherwise
 	 */
-	public Future<ResultSet> save(Future<ResultSet> future) throws SQLException {
-		SQLConnection conn = this.dbFuture.result();
-		
+	public Future<ResultSet> save() {
+		Future<ResultSet> future = Future.future();
+
 		StringBuilder insertStr = new StringBuilder("INSERT INTO " + getTable_name() + " ");
 		StringBuilder keyStr = new StringBuilder("(");
 		StringBuilder valueStr = new StringBuilder("(");
@@ -103,7 +108,7 @@ public abstract class BaseModel {
 		valueStr.replace(valueStr.length() - 1, valueStr.length(), ")");
 
 		insertStr.append(keyStr.toString()).append(" VALUES ").append(valueStr.toString()).append(";");
-	
+
 		// add values
 		Set<String> keys = saveRecord.keySet();
 		String[] keysArr = keys.toArray(new String[keys.size()]);
@@ -114,19 +119,24 @@ public abstract class BaseModel {
 
 		// empty the saveRecord
 		saveRecord = new HashMap<>();
-		conn.queryWithParams(insertStr.toString(), sqlParam, rs ->{
-			conn.close();
-			future.map(rs);
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.queryWithParams(insertStr.toString(), sqlParam, rs -> {
+				conn.close();
+				future.map(rs);
+			});
 		});
 		return future;
 	}
 
-	public Future<Void> save(String str, Future<Void> future) throws SQLException {
-
-		SQLConnection conn = this.dbFuture.result();
-		conn.execute("INSERT INTO " + getTable_name() + " " + str + ";", rs ->{
-			conn.close();
-			future.map(rs);
+	public Future<Void> save(String str) {
+		Future<Void> future = Future.future();
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.execute("INSERT INTO " + getTable_name() + " " + str + ";", rs -> {
+				conn.close();
+				future.map(rs);
+			});
 		});
 		return future;
 	}
@@ -135,37 +145,44 @@ public abstract class BaseModel {
 		this.saveRecord.put(column, value);
 	}
 
-//	public boolean save(HashMap<String, String> record) throws SQLException {
-//		throw new NotImplementedException();
-//	}
+	public boolean save(HashMap<String, String> record) {
+		throw new NotImplementedException();
+	}
 
-	public Future<Void> save(String[] record, Future<Void> future) throws SQLException {
+	public Future<Void> save(String[] record) {
+		Future<Void> future = Future.future();
+
 		StringBuilder insertStr = new StringBuilder("INSERT INTO " + getTable_name() + " (");
 		for (String val : record) {
 			insertStr.append(val).append(",");
 		}
 
 		insertStr.replace(insertStr.length() - 1, insertStr.length(), ");");
-		
-		SQLConnection conn = this.dbFuture.result();
-		conn.execute(insertStr.toString(), rs ->{
-			conn.close();
-			future.map(rs);
+
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.execute(insertStr.toString(), rs -> {
+				conn.close();
+				future.map(rs);
+			});
 		});
 		return future;
 	}
 
-	public Future<Void> find(String query, Future<Void> future) throws SQLException {
-
-		SQLConnection conn = this.dbFuture.result();
-		conn.query(query, row ->{
-			conn.close();
-			future.map(row);
+	public Future<Void> find(String query) {
+		Future<Void> future = Future.future();
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.query(query, row -> {
+				conn.close();
+				future.map(row);
+			});
 		});
 		return future;
 	}
 
-	public Future<Void> find(String[] columns, String where, int limit, Future<Void> future) throws SQLException {
+	public Future<Void> find(String[] columns, String where, int limit) {
+		Future<Void> future = Future.future();
 		StringBuilder findSQL = new StringBuilder("SELECT ");
 		if (columns == null || columns.length == 0)
 			findSQL.append("* ");
@@ -183,16 +200,19 @@ public abstract class BaseModel {
 		if (limit > 0) {
 			findSQL.append(" LIMIT ").append(limit);
 		}
-		
-		SQLConnection conn = this.dbFuture.result();
-		conn.query(findSQL.toString(), row -> {
-			conn.close();
-			future.map(row);
+
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.query(findSQL.toString(), row -> {
+				conn.close();
+				future.map(row);
+			});
 		});
 		return future;
 	}
 
-	public Future<Void> findOne(String[] columns, String where, Future<Void> future) throws SQLException {
+	public Future<Void> findOne(String[] columns, String where) {
+		Future<Void> future = Future.future();
 		StringBuilder findSQL = new StringBuilder("SELECT ");
 		if (columns == null || columns.length == 0)
 			findSQL.append("* ");
@@ -209,38 +229,44 @@ public abstract class BaseModel {
 		}
 
 //	        System.out.println(findSQL.toString());
-		SQLConnection conn = this.dbFuture.result();
-		conn.query(findSQL.toString(), row ->{
-			conn.close();
-			future.map(row);
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.query(findSQL.toString(), row -> {
+				conn.close();
+				future.map(row);
+			});
 		});
 		return future;
 	}
 
-	public Future<Void> remove(String where, Future<Void> future) throws SQLException {
+	public Future<Void> remove(String where) {
+		Future<Void> future = Future.future();
 		StringBuilder removeSQL = new StringBuilder("DELETE FROM ").append(getTable_name()).append(" WHERE ");
 		if (where == null)
 			throw new TypeNotPresentException("where need to be a valid where clause", null);
 		else
 			removeSQL.append(where);
 
-		SQLConnection conn = this.dbFuture.result();
-		conn.execute(removeSQL.toString(), res ->{
-			conn.close();
-			if(res.succeeded())
-				future.complete();
-			else 
-				future.fail(res.cause());
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.execute(removeSQL.toString(), res -> {
+				conn.close();
+				if (res.succeeded())
+					future.complete();
+				else
+					future.fail(res.cause());
+			});
 		});
 		return future;
 	}
 
-	public Future<Void> update(HashMap<String, ?> record, String id, Future<Void> future) throws SQLException {
-		SQLConnection conn = this.dbFuture.result();
+	public Future<Void> update(HashMap<String, ?> record, String id) {
+		Future<Void> future = Future.future();
+
 		if (record == null || record.size() == 0 || id.equals("0")) {
 			throw new TypeNotPresentException("where need to be a valid where clause", null);
 		}
-		
+
 		JsonArray params = new JsonArray();
 
 		StringBuilder updateSQL = new StringBuilder("UPDATE ").append(getTable_name()).append(" SET ");
@@ -252,24 +278,28 @@ public abstract class BaseModel {
 
 		updateSQL.delete(updateSQL.length() - 1, updateSQL.length()); // remove the last ,
 		updateSQL.append(" WHERE id = ").append(id).append(";");
-
-		
-		conn.updateWithParams(updateSQL.toString(), params, res ->{
-			conn.close();
-			future.map(res);
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.updateWithParams(updateSQL.toString(), params, res -> {
+				conn.close();
+				future.map(res);
+			});
 		});
 		return future;
 	}
 
-	public Future<Void> truncate(Future<Void> future) throws SQLException {
-		SQLConnection conn = this.dbFuture.result();
-		conn.execute("TRUNCATE " + getTable_name(), res ->{
-			conn.close();
-			future.map(res);
+	public Future<Void> truncate() {
+		Future<Void> future = Future.future();
+		Constant.postgreSQLClient.getConnection(ar -> {
+			SQLConnection conn = ar.result();
+			conn.execute("TRUNCATE " + getTable_name(), res -> {
+				conn.close();
+				future.map(res);
+			});
 		});
 		return future;
 	}
-	
+
 //	    public boolean update(String query, int id) throws SQLException {
 //	        StringBuilder updateSQL = new StringBuilder("UPDATE ").append(getTable_name()).append(query);
 //	        PreparedStatement stm = this.connection.prepareStatement(updateSQL.toString());

@@ -1,5 +1,6 @@
 package com.vertx.starter;
 
+import com.vertx.starter.models.User;
 import com.vertx.starter.routes.Routes;
 import com.vertx.starter.util.CORS;
 import com.vertx.starter.util.Config;
@@ -55,6 +56,8 @@ public class MainVerticle extends AbstractVerticle {
 				future.fail(ar.cause());
 			} else if (ar.succeeded()) {
 				Constant.LOGGER.error("Database connected");
+				
+				(new User()).create();
 				future.complete();
 			}
 		});
