@@ -14,14 +14,18 @@ public class User extends BaseModel {
 
 	@Override
 	protected HashMap<String, String> getColumns() {
-		// TODO Auto-generated method stub
-		return null;
+		HashMap<String, String> columns = new HashMap<>();
+		columns.put("id", "serial not null");
+		columns.put("name", "varchar(100) not null");
+		columns.put("address", "varchar(170) not null,");
+		columns.put("created_at", "timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP");
+		columns.put("updated_at", "timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP");
+		return columns;
 	}
 
 	@Override
 	protected String getConstraint() {
-		// TODO Auto-generated method stub
-		return null;
+		return "PRIMARY KEY (id),";
 	}
 
 }
