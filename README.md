@@ -9,12 +9,17 @@ frameworks.
     |  +-MainVerticle.java
     |  |  +-controllers
     |  |  |  +-IndexController.java
+    |  |  +-models
+    |  |  | +-User.java
     |  |  +-routes
     |  |  |  +-Routes.java
     |  |  +-util
     |  |  |  +-BaseController.java
+    |  |  |  +-BaseModel.java
     |  |  |  +-Config.java
+    |  |  |  +-Constant.java
     |  |  |  +-CORS.java
+    
 
 ### `starter` Package
 This package is the root package of the application. It contains the MainVerticle.java 
@@ -24,6 +29,10 @@ business logic but as a glue for the rest of the application.
 ### `controllers` Package
 This package contains all the controllers of the application. This was intended to be 
 one class for one endpoint. However you can do whatever you want :)
+
+### `models` Package
+This package contains classes who's lower case names corresponds to tables in the database. 
+The class inherit BaseModel which provides methods for CRUD operation. 
 
 ### `routes`Package
 This package contains only one file, the Routes.java file. This is where all the endpoints 
