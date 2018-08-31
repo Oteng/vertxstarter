@@ -8,6 +8,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
+import io.vertx.ext.sql.UpdateResult;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public abstract class BaseModel {
@@ -55,7 +56,8 @@ public abstract class BaseModel {
 			SQLConnection conn = ar.result();
 			conn.execute(stm.toString(), res -> {
 				conn.close();
-				future.map(res);
+				future.complete(res.result());
+				future.fail(res.cause());
 			});
 		});
 
@@ -69,7 +71,8 @@ public abstract class BaseModel {
 			conn.execute("SELECT CASE WHEN exists((SELECT * FROM information_schema.tables WHERE 'table_name' = \'"
 					+ this.table_name + "\')) THEN 1 ELSE 0 END", rs -> {
 						conn.close();
-						future.map(rs);
+						future.complete(rs.result());
+						future.fail(rs.cause());
 					});
 		});
 		return future;
@@ -93,7 +96,7 @@ public abstract class BaseModel {
 	 *
 	 * @return true when the insertion was done correctly and false otherwise
 	 */
-	public Future<ResultSet> save() {
+	public Future<ResultSet> save(boolean returnId) {
 		Future<ResultSet> future = Future.future();
 
 		StringBuilder insertStr = new StringBuilder("INSERT INTO " + getTable_name() + " ");
@@ -107,7 +110,11 @@ public abstract class BaseModel {
 		keyStr.replace(keyStr.length() - 1, keyStr.length(), ")");
 		valueStr.replace(valueStr.length() - 1, valueStr.length(), ")");
 
-		insertStr.append(keyStr.toString()).append(" VALUES ").append(valueStr.toString()).append(";");
+		insertStr.append(keyStr.toString()).append(" VALUES ").append(valueStr.toString());
+		if(returnId)
+			insertStr.append(" RETURNING *;");
+		else insertStr.append(";");
+		
 
 		// add values
 		Set<String> keys = saveRecord.keySet();
@@ -123,7 +130,8 @@ public abstract class BaseModel {
 			SQLConnection conn = ar.result();
 			conn.queryWithParams(insertStr.toString(), sqlParam, rs -> {
 				conn.close();
-				future.map(rs);
+				future.complete(rs.result());
+				future.fail(rs.cause());
 			});
 		});
 		return future;
@@ -135,7 +143,8 @@ public abstract class BaseModel {
 			SQLConnection conn = ar.result();
 			conn.execute("INSERT INTO " + getTable_name() + " " + str + ";", rs -> {
 				conn.close();
-				future.map(rs);
+				future.complete(rs.result());
+				future.fail(rs.cause());
 			});
 		});
 		return future;
@@ -163,26 +172,28 @@ public abstract class BaseModel {
 			SQLConnection conn = ar.result();
 			conn.execute(insertStr.toString(), rs -> {
 				conn.close();
-				future.map(rs);
+				future.complete(rs.result());
+				future.fail(rs.cause());
 			});
 		});
 		return future;
 	}
 
-	public Future<Void> find(String query) {
-		Future<Void> future = Future.future();
+	public Future<ResultSet> find(String query) {
+		Future<ResultSet> future = Future.future();
 		Constant.postgreSQLClient.getConnection(ar -> {
 			SQLConnection conn = ar.result();
 			conn.query(query, row -> {
 				conn.close();
-				future.map(row);
+				future.complete(row.result());
+				future.fail(row.cause());
 			});
 		});
 		return future;
 	}
 
-	public Future<Void> find(String[] columns, String where, int limit) {
-		Future<Void> future = Future.future();
+	public Future<ResultSet> find(String[] columns, String where, int limit) {
+		Future<ResultSet> future = Future.future();
 		StringBuilder findSQL = new StringBuilder("SELECT ");
 		if (columns == null || columns.length == 0)
 			findSQL.append("* ");
@@ -205,14 +216,15 @@ public abstract class BaseModel {
 			SQLConnection conn = ar.result();
 			conn.query(findSQL.toString(), row -> {
 				conn.close();
-				future.map(row);
+				future.complete(row.result());
+				future.fail(row.cause());
 			});
 		});
 		return future;
 	}
 
-	public Future<Void> findOne(String[] columns, String where) {
-		Future<Void> future = Future.future();
+	public Future<ResultSet> findOne(String[] columns, String where) {
+		Future<ResultSet> future = Future.future();
 		StringBuilder findSQL = new StringBuilder("SELECT ");
 		if (columns == null || columns.length == 0)
 			findSQL.append("* ");
@@ -233,7 +245,8 @@ public abstract class BaseModel {
 			SQLConnection conn = ar.result();
 			conn.query(findSQL.toString(), row -> {
 				conn.close();
-				future.map(row);
+				future.complete(row.result());
+				future.fail(row.cause());
 			});
 		});
 		return future;
@@ -260,8 +273,8 @@ public abstract class BaseModel {
 		return future;
 	}
 
-	public Future<Void> update(HashMap<String, ?> record, String id) {
-		Future<Void> future = Future.future();
+	public Future<UpdateResult> update(HashMap<String, ?> record, String id) {
+		Future<UpdateResult> future = Future.future();
 
 		if (record == null || record.size() == 0 || id.equals("0")) {
 			throw new TypeNotPresentException("where need to be a valid where clause", null);
@@ -282,7 +295,8 @@ public abstract class BaseModel {
 			SQLConnection conn = ar.result();
 			conn.updateWithParams(updateSQL.toString(), params, res -> {
 				conn.close();
-				future.map(res);
+				future.complete(res.result());
+				future.fail(res.cause());
 			});
 		});
 		return future;
@@ -294,7 +308,10 @@ public abstract class BaseModel {
 			SQLConnection conn = ar.result();
 			conn.execute("TRUNCATE " + getTable_name(), res -> {
 				conn.close();
-				future.map(res);
+				if (res.succeeded())
+					future.complete();
+				else
+					future.fail(res.cause());
 			});
 		});
 		return future;
