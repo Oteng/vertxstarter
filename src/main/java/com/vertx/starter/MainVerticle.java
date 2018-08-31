@@ -3,7 +3,6 @@ package com.vertx.starter;
 import com.vertx.starter.models.User;
 import com.vertx.starter.routes.Routes;
 import com.vertx.starter.util.CORS;
-import com.vertx.starter.util.Config;
 import com.vertx.starter.util.Constant;
 
 import io.vertx.core.AbstractVerticle;
@@ -21,11 +20,11 @@ public class MainVerticle extends AbstractVerticle {
 		CORS.enableCorsSupport(routes.getRoutes());
 
 		Future<Void> steps = dbInit().compose(v -> createHttpServer(routes.getRoutes(),
-				Config.config().getString("base.host"), Config.config().getInteger("base.port")));
+				config().getString("base.host"), config().getInteger("base.port")));
 		steps.setHandler(ar -> {
 			if (ar.succeeded()) {
-				Constant.LOGGER.info("Server started on http://" + Config.config().getString("base.host") + ":"
-						+ Config.config().getInteger("base.port"));
+				Constant.LOGGER.info("Server started on http://" + config().getString("base.host") + ":"
+						+ config().getInteger("base.port"));
 				startFuture.complete();
 			} else {
 				Constant.LOGGER.error("Server could not start", ar.cause());
@@ -42,11 +41,11 @@ public class MainVerticle extends AbstractVerticle {
 
 	private Future<Void> dbInit() {
 		Future<Void> future = Future.future();
-		JsonObject postgreSQLClientConfig = new JsonObject().put("host", Config.config().getString("db.host"));
-		postgreSQLClientConfig.put("post", Config.config().getString("db.post"));
-		postgreSQLClientConfig.put("username", Config.config().getString("db.username"));
-		postgreSQLClientConfig.put("password", Config.config().getString("db.password"));
-		postgreSQLClientConfig.put("database", Config.config().getString("db.database"));
+		JsonObject postgreSQLClientConfig = new JsonObject().put("host", config().getString("db.host"));
+		postgreSQLClientConfig.put("post", config().getString("db.post"));
+		postgreSQLClientConfig.put("username", config().getString("db.username"));
+		postgreSQLClientConfig.put("password", config().getString("db.password"));
+		postgreSQLClientConfig.put("database", config().getString("db.database"));
 
 		Constant.postgreSQLClient = PostgreSQLClient.createShared(vertx, postgreSQLClientConfig);
 
