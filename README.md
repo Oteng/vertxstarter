@@ -16,7 +16,6 @@ frameworks.
     |  |  +-util
     |  |  |  +-BaseController.java
     |  |  |  +-BaseModel.java
-    |  |  |  +-Config.java
     |  |  |  +-Constant.java
     |  |  |  +-CORS.java
     
