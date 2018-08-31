@@ -2,18 +2,45 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36}: %msg%n</pattern>
     </encoder>
   </appender>
 
-  <logger name="com.mchange.v2" level="warn"/>
-  <logger name="io.netty" level="warn"/>
-  <logger name="io.vertx" level="info"/>
-  <logger name="io.vertx.guides.wiki" level="debug"/>
+	<property name="DEV_HOME" value="/var/log/vertxstarter" />
 
-  <root level="debug">
-    <appender-ref ref="STDOUT"/>
-  </root>
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${DEV_HOME}/debug.log</file>
+        <append>true</append>
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-4relative [%thread] %-5level [%logger{35}] - %msg%n</pattern>
+    </encoder>
+  </appender>
 
+  <appender name="ERROR_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${DEV_HOME}/error.log</file>
+        <append>true</append>
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-4relative [%thread] %-5level [%logger{35}] - %msg%n</pattern>
+    </encoder>
+  </appender>
+        
+
+  	<logger name="com.mchange.v2" level="warn"/>
+  	<logger name="io.netty" level="warn"/>
+  	<logger name="io.vertx" level="info"/>
+  	<logger name="io.vertx.guides.wiki" level="debug"/>
+
+	<logger name="com.vertx.starter" level="DEBUG" additivity="false">
+    	<appender-ref ref="STDOUT" />
+    	<appender-ref ref="FILE" />
+	</logger>
+
+  	<root level="debug">
+    	<appender-ref ref="STDOUT"/>
+		<appender-ref ref="FILE" />
+  	</root>
+    <root level="error">
+		<appender-ref ref="ERROR_FILE" />
+	</root>
 </configuration>
 
