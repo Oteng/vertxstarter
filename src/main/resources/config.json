@@ -1,4 +1,10 @@
 {
     "base.host": "localhost",
-    "base.port": 9001
+    "base.port": 9001,
+
+    "db.host": "localhost",
+    "db.port": "5432",
+    "db.username": "root",
+    "db.pass": "123456",
+    "db.database": "test"
 }
